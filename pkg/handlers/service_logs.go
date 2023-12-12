@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -72,19 +71,12 @@ func replacePlaceHoldersInString(s string, alert *template.Alert) (string, error
 
 func (b *ServiceLogBuilder) Build(firing bool, alert *template.Alert) (*ServiceLog, error) {
 	var summary, description string
+	var docReferences []string
 
 	// Adjust the summary based on whether the alert is firing or resolved.
 	if firing {
 		summary = ServiceLogActivePrefix + ": " + b.summary
 		description = b.firingDesc
-
-		if b.references != nil && len(b.references) > 0 {
-			refs, err := json.Marshal(b.references)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal references: %v", err)
-			}
-			description = fmt.Sprintf("%s\nReferences: %s", description, string(refs))
-		}
 	} else {
 		summary = ServiceLogResolvePrefix + ": " + b.summary
 		description = b.resolveDesc
@@ -102,24 +94,49 @@ func (b *ServiceLogBuilder) Build(firing bool, alert *template.Alert) (*ServiceL
 		}
 	}
 
-	return b.wrappedBuilder.Summary(summary).Description(description).Build()
+	// Handle DocReferences
+	if len(b.references) > 0 {
+		for _, ref := range b.references {
+			docReferences = append(docReferences, string(ref))
+		}
+	}
+
+	// Directly assign the docReferences slice
+	logEntry, err := b.wrappedBuilder.
+		Summary(summary).
+		Description(description).
+		DocReferences(docReferences...).
+		Build()
+
+	return logEntry, err
 }
 
-func NewTestServiceLog(summary, desc, clusterUUID string, severity v1alpha1.NotificationSeverity, logType string) *ServiceLog {
-	sl, _ := slv1.NewLogEntry().
+func NewTestServiceLog(summary, desc, clusterUUID string, severity v1alpha1.NotificationSeverity, logType string, references []v1alpha1.NotificationReferenceType) *ServiceLog {
+	// Convert references to string slice for docReferences
+	var docReferences []string
+	for _, ref := range references {
+		docReferences = append(docReferences, string(ref))
+	}
+
+	// Construct the ServiceLog using the LogEntryBuilder
+	slBuilder := slv1.NewLogEntry().
 		Summary(summary).
 		Description(desc).
+		DocReferences(docReferences...).
 		ServiceName(consts.ServiceLogServiceName).
 		ClusterUUID(clusterUUID).
 		InternalOnly(false).
 		Severity(slv1.Severity(severity)).
-		LogType(slv1.LogType(logType)).Build()
+		LogType(slv1.LogType(logType))
+
+	// Build the ServiceLog object
+	sl, _ := slBuilder.Build()
 
 	return sl
 }
 
 type OCMClient interface {
-	SendServiceLog(serviceLog *ServiceLog) error
+	SendServiceLog(logEntry *slv1.LogEntry) error
 }
 
 type ocmClientImpl struct {
@@ -133,9 +150,9 @@ func NewOcmClient(ocmConnection *sdk.Connection) OCMClient {
 	}
 }
 
-func (o *ocmClientImpl) SendServiceLog(serviceLog *ServiceLog) error {
+func (o *ocmClientImpl) SendServiceLog(logEntry *slv1.LogEntry) error {
 	// Use the OCM SDK to construct the request for posting a service log for a specific cluster.
-	request := o.ocmConnection.ServiceLogs().V1().ClusterLogs().Add().Body(serviceLog)
+	request := o.ocmConnection.ServiceLogs().V1().ClusterLogs().Add().Body(logEntry)
 
 	// Send the request to the OCM API.
 	response, err := request.Send()
@@ -153,9 +170,9 @@ func (o *ocmClientImpl) SendServiceLog(serviceLog *ServiceLog) error {
 }
 
 func BuildAndSendServiceLog(slBuilder *ServiceLogBuilder, firing bool, alert *template.Alert, ocmClient OCMClient) error {
-	if sl, err := slBuilder.Build(firing, alert); err != nil {
+	logEntry, err := slBuilder.Build(firing, alert)
+	if err != nil {
 		return err
-	} else {
-		return ocmClient.SendServiceLog(sl)
 	}
+	return ocmClient.SendServiceLog(logEntry)
 }

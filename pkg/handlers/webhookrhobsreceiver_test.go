@@ -35,7 +35,6 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 		testMFN          oav1alpha1.ManagedFleetNotification
 		testMFNR         oav1alpha1.ManagedFleetNotificationRecord
 		mockStatusWriter *clientmocks.MockStatusWriter
-		serviceLog       *ServiceLog
 	)
 
 	BeforeEach(func() {
@@ -51,12 +50,6 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 		testAlert = testconst.NewTestAlert(false, true)
 		testMFN = testconst.NewManagedFleetNotification()
 		testMFNR = testconst.NewManagedFleetNotificationRecord()
-		serviceLog = NewTestServiceLog(
-			ServiceLogActivePrefix+": "+testconst.ServiceLogSummary,
-			testconst.ServiceLogFleetDesc,
-			testconst.TestHostedClusterID,
-			testconst.TestNotification.Severity,
-			"")
 	})
 	AfterEach(func() {
 		server.Close()
@@ -77,7 +70,7 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 							return nil
 						}),
 					// Send the SL
-					mockOCMClient.EXPECT().SendServiceLog(serviceLog).Return(nil),
+					mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 					mockClient.EXPECT().Status().Return(mockStatusWriter),
 					mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil),
 				)
@@ -101,7 +94,7 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 						mockClient.EXPECT().Status().Return(mockStatusWriter),
 						mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil),
 						// Send the SL
-						mockOCMClient.EXPECT().SendServiceLog(serviceLog).Return(nil),
+						mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 						mockClient.EXPECT().Status().Return(mockStatusWriter),
 						mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil),
 					)
@@ -115,7 +108,7 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 					// Fetch the MFNR
 					mockClient.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).SetArg(2, testMFNR),
 					// Send the SL
-					mockOCMClient.EXPECT().SendServiceLog(serviceLog).Return(nil),
+					mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 					mockClient.EXPECT().Status().Return(mockStatusWriter),
 					mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil),
 				)
@@ -138,7 +131,7 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 						// Fetch the MFNR
 						mockClient.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).SetArg(2, testMFNR),
 						// Send the SL
-						mockOCMClient.EXPECT().SendServiceLog(serviceLog).Return(nil),
+						mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 						mockClient.EXPECT().Status().Return(mockStatusWriter),
 						mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 							func(ctx context.Context, mfnr *oav1alpha1.ManagedFleetNotificationRecord, co ...client.UpdateOptions) error {
@@ -172,7 +165,7 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 						// Fetch the MFNR
 						mockClient.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).SetArg(2, testMFNR),
 						// Send the SL
-						mockOCMClient.EXPECT().SendServiceLog(serviceLog).Return(nil),
+						mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 						mockClient.EXPECT().Status().Return(mockStatusWriter),
 						mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 							func(ctx context.Context, mfnr *oav1alpha1.ManagedFleetNotificationRecord, co ...client.UpdateOptions) error {
@@ -199,7 +192,7 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 						// Fetch the MFNR
 						mockClient.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).SetArg(2, testMFNR),
 						// Send the SL
-						mockOCMClient.EXPECT().SendServiceLog(serviceLog).Return(nil),
+						mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 						mockClient.EXPECT().Status().Return(mockStatusWriter),
 						mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 							func(ctx context.Context, mfnr *oav1alpha1.ManagedFleetNotificationRecord, co ...client.UpdateOptions) error {

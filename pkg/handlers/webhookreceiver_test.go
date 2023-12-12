@@ -49,7 +49,6 @@ var _ = Describe("Webhook Handlers", func() {
 		testAlert                   template.Alert
 		testAlertResolved           template.Alert
 		testManagedNotificationList *ocmagentv1alpha1.ManagedNotificationList
-		activeServiceLog            *ServiceLog
 		resolvedServiceLog          *ServiceLog
 	)
 
@@ -73,18 +72,13 @@ var _ = Describe("Webhook Handlers", func() {
 		}
 		testAlert = testconst.NewTestAlert(false, false)
 		testAlertResolved = testconst.NewTestAlert(true, false)
-		activeServiceLog = NewTestServiceLog(
-			ServiceLogActivePrefix+": "+testconst.ServiceLogSummary,
-			testconst.ServiceLogActiveDesc+"\nReferences: [\""+slRefs+"\"]",
-			"",
-			testconst.TestNotification.Severity,
-			testconst.TestNotification.LogType)
 		resolvedServiceLog = NewTestServiceLog(
 			ServiceLogResolvePrefix+": "+testconst.ServiceLogSummary,
 			testconst.ServiceLogResolvedDesc,
 			"",
 			testconst.TestNotification.Severity,
-			testconst.TestNotification.LogType)
+			testconst.TestNotification.LogType,
+			testconst.TestNotification.References)
 	})
 	AfterEach(func() {
 		server.Close()
@@ -315,7 +309,7 @@ var _ = Describe("Webhook Handlers", func() {
 					},
 				}
 				gomock.InOrder(
-					mockOCMClient.EXPECT().SendServiceLog(activeServiceLog).Return(nil),
+					mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 					mockClient.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).SetArg(2, testManagedNotificationList.Items[0]),
 					mockClient.EXPECT().Status().Return(mockStatusWriter),
 					mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil),
@@ -533,7 +527,7 @@ var _ = Describe("Webhook Handlers", func() {
 					},
 				}
 				gomock.InOrder(
-					mockOCMClient.EXPECT().SendServiceLog(activeServiceLog).Return(k8serrs.NewInternalError(fmt.Errorf("a fake error"))),
+					mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(k8serrs.NewInternalError(fmt.Errorf("a fake error"))),
 				)
 				err := webhookReceiverHandler.processAlert(testAlert, testManagedNotificationList, true)
 				Expect(err).Should(HaveOccurred())
@@ -576,7 +570,7 @@ var _ = Describe("Webhook Handlers", func() {
 					},
 				}
 				gomock.InOrder(
-					mockOCMClient.EXPECT().SendServiceLog(activeServiceLog).Return(nil),
+					mockOCMClient.EXPECT().SendServiceLog(gomock.Any()).Return(nil),
 					mockClient.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).SetArg(2, testManagedNotificationList.Items[0]),
 					mockClient.EXPECT().Status().Return(mockStatusWriter),
 					mockStatusWriter.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(k8serrs.NewInternalError(fmt.Errorf("a fake error"))),

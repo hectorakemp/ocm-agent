@@ -44,7 +44,9 @@ var _ = Describe("ServiceLogsHandler", func() {
 			testconst.ServiceLogActiveDesc,
 			testconst.TestHostedClusterID,
 			testconst.TestNotification.Severity,
-			testconst.TestNotification.LogType)
+			testconst.TestNotification.LogType,
+			testconst.TestNotification.References,
+		)
 
 		mockServer.AppendHandlers(
 			RespondWith(http.StatusCreated, `{}`, http.Header{"Content-Type": []string{"application/json"}}),
