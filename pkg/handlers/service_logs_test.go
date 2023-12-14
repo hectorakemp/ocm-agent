@@ -39,7 +39,7 @@ var _ = Describe("ServiceLogsHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		ocmClient = handlers.NewOcmClient(ocmConnection)
-		serviceLog = handlers.NewTestServiceLog(
+		serviceLog = testconst.NewTestServiceLog(
 			handlers.ServiceLogActivePrefix+": "+testconst.ServiceLogSummary,
 			testconst.ServiceLogActiveDesc,
 			testconst.TestHostedClusterID,

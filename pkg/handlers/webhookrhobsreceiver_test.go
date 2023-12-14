@@ -35,6 +35,7 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 		testMFN          oav1alpha1.ManagedFleetNotification
 		testMFNR         oav1alpha1.ManagedFleetNotificationRecord
 		mockStatusWriter *clientmocks.MockStatusWriter
+		// serviceLog       *ServiceLog
 	)
 
 	BeforeEach(func() {
@@ -50,7 +51,15 @@ var _ = Describe("RHOBS Webhook Handlers", func() {
 		testAlert = testconst.NewTestAlert(false, true)
 		testMFN = testconst.NewManagedFleetNotification()
 		testMFNR = testconst.NewManagedFleetNotificationRecord()
+		// serviceLog = testconst.NewTestServiceLog(
+		// 	ServiceLogActivePrefix+": "+testconst.ServiceLogSummary,
+		// 	testconst.ServiceLogFleetDesc,
+		// 	testconst.TestHostedClusterID,
+		// 	testconst.TestNotification.Severity,
+		// 	"",
+		// 	testconst.TestNotification.References)
 	})
+
 	AfterEach(func() {
 		server.Close()
 	})

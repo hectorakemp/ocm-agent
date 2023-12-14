@@ -4,14 +4,15 @@ import (
 	"context"
 	"time"
 
+	slv1 "github.com/openshift-online/ocm-sdk-go/servicelogs/v1"
+	ocmagentv1alpha1 "github.com/openshift/ocm-agent-operator/api/v1alpha1"
+	"github.com/openshift/ocm-agent/pkg/consts"
 	"github.com/prometheus/alertmanager/template"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-
-	ocmagentv1alpha1 "github.com/openshift/ocm-agent-operator/api/v1alpha1"
 )
 
 const (
@@ -168,4 +169,28 @@ func setScheme(scheme *runtime.Scheme) *runtime.Scheme {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(ocmagentv1alpha1.SchemeBuilder.AddToScheme(scheme))
 	return scheme
+}
+
+func NewTestServiceLog(summary, desc, clusterUUID string, severity ocmagentv1alpha1.NotificationSeverity, logType string, references []ocmagentv1alpha1.NotificationReferenceType) *slv1.LogEntry {
+	// Convert references to string slice for docReferences
+	var docReferences []string
+	for _, ref := range references {
+		docReferences = append(docReferences, string(ref))
+	}
+
+	// Construct the ServiceLog using the LogEntryBuilder
+	slBuilder := slv1.NewLogEntry().
+		Summary(summary).
+		Description(desc).
+		DocReferences(docReferences...).
+		ServiceName(consts.ServiceLogServiceName).
+		ClusterUUID(clusterUUID).
+		InternalOnly(false).
+		Severity(slv1.Severity(severity)).
+		LogType(slv1.LogType(logType))
+
+	// Build the ServiceLog object
+	sl, _ := slBuilder.Build()
+
+	return sl
 }

@@ -95,7 +95,7 @@ func (b *ServiceLogBuilder) Build(firing bool, alert *template.Alert) (*ServiceL
 	}
 
 	// Handle DocReferences
-	if len(b.references) > 0 {
+	if b.references != nil && len(b.references) > 0 {
 		for _, ref := range b.references {
 			docReferences = append(docReferences, string(ref))
 		}
@@ -109,30 +109,6 @@ func (b *ServiceLogBuilder) Build(firing bool, alert *template.Alert) (*ServiceL
 		Build()
 
 	return logEntry, err
-}
-
-func NewTestServiceLog(summary, desc, clusterUUID string, severity v1alpha1.NotificationSeverity, logType string, references []v1alpha1.NotificationReferenceType) *ServiceLog {
-	// Convert references to string slice for docReferences
-	var docReferences []string
-	for _, ref := range references {
-		docReferences = append(docReferences, string(ref))
-	}
-
-	// Construct the ServiceLog using the LogEntryBuilder
-	slBuilder := slv1.NewLogEntry().
-		Summary(summary).
-		Description(desc).
-		DocReferences(docReferences...).
-		ServiceName(consts.ServiceLogServiceName).
-		ClusterUUID(clusterUUID).
-		InternalOnly(false).
-		Severity(slv1.Severity(severity)).
-		LogType(slv1.LogType(logType))
-
-	// Build the ServiceLog object
-	sl, _ := slBuilder.Build()
-
-	return sl
 }
 
 type OCMClient interface {
