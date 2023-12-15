@@ -102,8 +102,12 @@ func NewFleetNotification() ocmagentv1alpha1.FleetNotification {
 		Name:                TestNotificationName,
 		Summary:             "test-summary [namespace: '${namespace}']",
 		NotificationMessage: "test-notification [description: '${description}', overriden-key: '${overriden-key}']",
-		Severity:            "test-severity",
-		ResendWait:          1,
+		References: []ocmagentv1alpha1.NotificationReferenceType{
+			"http://some.awesome.com/reference",
+			"https://another.great.com/resource",
+		},
+		Severity:   "test-severity",
+		ResendWait: 1,
 	}
 }
 
