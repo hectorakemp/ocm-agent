@@ -17,6 +17,7 @@ import (
 	. "github.com/openshift-online/ocm-sdk-go/testing"
 	"github.com/openshift/ocm-agent/pkg/consts"
 	"github.com/openshift/ocm-agent/pkg/handlers"
+	"github.com/openshift/ocm-agent/pkg/ocm"
 )
 
 var getUpgradePolicies = `{
@@ -83,7 +84,7 @@ var _ = Describe("UpgradePolicies", func() {
 			URL(apiServer.URL()).
 			Build()
 
-		upgradePoliciesHandler = handlers.NewUpgradePoliciesHandler(sdkclient, internalId)
+		upgradePoliciesHandler = handlers.NewUpgradePoliciesHandler(ocm.NewOcmClient(sdkclient), internalId)
 		responseRecorder = httptest.NewRecorder()
 
 	})
